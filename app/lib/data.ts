@@ -93,6 +93,19 @@ export interface GameDetail {
   developers?: { id: number; name: string; slug: string }[]
 }
 
+// ── API types for game logs ───────────────────────────────────────────────────
+
+export interface GameLog {
+  id: number
+  rawg_id: number
+  title: string
+  cover_url: string | null
+  status: Status
+  rating: number | null
+  review: string | null
+  created_at: string
+}
+
 // ── Static library data (no backend yet) ──────────────────────────────────────
 
 export interface LibraryEntry {

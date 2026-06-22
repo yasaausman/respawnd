@@ -3,13 +3,48 @@
 import { useState } from 'react'
 import type { Status } from '@/app/lib/data'
 
+const API_BASE = 'http://localhost:8000'
 const STATUSES: Status[] = ['Played', 'Playing', 'Backlog', 'Want']
 
-export default function LogGameForm({ gameTitle }: { gameTitle: string }) {
+interface Props {
+  rawgId: number
+  gameTitle: string
+  coverUrl: string | null
+}
+
+export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
   const [status, setStatus] = useState<Status>('Played')
   const [rating, setRating] = useState(7)
   const [review, setReview] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setError(null)
+    try {
+      const res = await fetch(`${API_BASE}/api/logs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rawg_id: rawgId,
+          title: gameTitle,
+          cover_url: coverUrl,
+          status,
+          rating,
+          review: review.trim() || null,
+        }),
+      })
+      if (!res.ok) throw new Error('Server error')
+      setSubmitted(true)
+    } catch {
+      setError('Failed to save. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   if (submitted) {
     return (
@@ -21,7 +56,7 @@ export default function LogGameForm({ gameTitle }: { gameTitle: string }) {
           your library.
         </p>
         <button
-          onClick={() => setSubmitted(false)}
+          onClick={() => { setSubmitted(false); setReview(''); setRating(7); setStatus('Played') }}
           className="mt-5 text-sm text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline transition-colors"
         >
           Log again
@@ -34,17 +69,10 @@ export default function LogGameForm({ gameTitle }: { gameTitle: string }) {
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
       <h2 className="text-lg font-semibold text-zinc-100">Log this game</h2>
       <p className="mt-1 text-sm text-zinc-500">
-        Add{' '}
-        <span className="text-zinc-300">{gameTitle}</span> to your library
+        Add <span className="text-zinc-300">{gameTitle}</span> to your library
       </p>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          setSubmitted(true)
-        }}
-        className="mt-6 flex flex-col gap-6"
-      >
+      <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-6">
         {/* Status */}
         <div>
           <label className="mb-3 block text-sm font-medium text-zinc-300">
@@ -113,11 +141,18 @@ export default function LogGameForm({ gameTitle }: { gameTitle: string }) {
           />
         </div>
 
+        {error && (
+          <p className="rounded-lg border border-red-800/50 bg-red-950/30 px-3 py-2 text-sm text-red-400">
+            {error}
+          </p>
+        )}
+
         <button
           type="submit"
-          className="w-full rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-500 active:bg-violet-700"
+          disabled={submitting}
+          className="w-full rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-500 active:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Add to Library
+          {submitting ? 'Saving…' : 'Add to Library'}
         </button>
       </form>
     </div>

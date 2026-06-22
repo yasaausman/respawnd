@@ -1,26 +1,70 @@
 import os
-from typing import Any
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from typing import Any, Optional
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import Field, Session, SQLModel, create_engine, select
 
-# Load variables from a local .env file (e.g. RAWG_API_KEY) into the process environment.
+# Load variables from a local .env file (e.g. RAWG_API_KEY, DATABASE_URL).
 load_dotenv()
 
-# Read the RAWG API key once at startup; fail fast if it is missing.
+# Read required env vars once at startup; fail fast if either is missing.
 RAWG_API_KEY = os.getenv("RAWG_API_KEY")
 if not RAWG_API_KEY:
     raise RuntimeError("RAWG_API_KEY environment variable is not set")
 
-# Base URL for all RAWG HTTP requests.
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set")
+
 RAWG_BASE_URL = "https://api.rawg.io/api"
 
-# Create the FastAPI application instance.
-app = FastAPI(title="Respawnd API")
+# ── Database ──────────────────────────────────────────────────────────────────
 
-# Allow the Next.js dev server on localhost:3000 to call this API from the browser.
+engine = create_engine(DATABASE_URL)
+
+
+class GameLog(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    rawg_id: int
+    title: str
+    cover_url: Optional[str] = None
+    status: str
+    rating: Optional[int] = None
+    review: Optional[str] = None
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+
+
+class GameLogCreate(SQLModel):
+    rawg_id: int
+    title: str
+    cover_url: Optional[str] = None
+    status: str
+    rating: Optional[int] = None
+    review: Optional[str] = None
+
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+
+# ── App ───────────────────────────────────────────────────────────────────────
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    SQLModel.metadata.create_all(engine)
+    yield
+
+
+app = FastAPI(title="Respawnd API", lifespan=lifespan)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -29,6 +73,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# ── RAWG helpers ──────────────────────────────────────────────────────────────
 
 async def fetch_rawg(path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
     """Call a RAWG endpoint and return the parsed JSON body."""
@@ -49,6 +95,8 @@ async def fetch_rawg(path: str, params: dict[str, Any] | None = None) -> dict[st
     return response.json()
 
 
+# ── RAWG endpoints ────────────────────────────────────────────────────────────
+
 @app.get("/api/search")
 async def search_games(q: str = Query(..., min_length=1, description="Search query")):
     """
@@ -60,7 +108,6 @@ async def search_games(q: str = Query(..., min_length=1, description="Search que
         params={"search": q, "page_size": 12},
     )
 
-    # Map RAWG results down to the fields the frontend needs.
     games = [
         {
             "id": game["id"],
@@ -104,3 +151,37 @@ async def popular_games():
 async def get_game(game_id: int):
     """Return full RAWG details for a single game by id."""
     return await fetch_rawg(f"/games/{game_id}")
+
+
+# ── Log endpoints ─────────────────────────────────────────────────────────────
+
+@app.post("/api/logs", response_model=GameLog, status_code=201)
+def create_log(payload: GameLogCreate, session: Session = Depends(get_session)):
+    """Create a new game log entry."""
+    log = GameLog(**payload.model_dump())
+    session.add(log)
+    session.commit()
+    session.refresh(log)
+    return log
+
+
+@app.get("/api/logs", response_model=list[GameLog])
+def list_logs(
+    status: Optional[str] = Query(default=None, description="Filter by status"),
+    session: Session = Depends(get_session),
+):
+    """Return all game logs, optionally filtered by status."""
+    query = select(GameLog)
+    if status:
+        query = query.where(GameLog.status == status)
+    return session.exec(query.order_by(GameLog.created_at.desc())).all()
+
+
+@app.delete("/api/logs/{log_id}", status_code=204)
+def delete_log(log_id: int, session: Session = Depends(get_session)):
+    """Delete a game log entry by id."""
+    log = session.get(GameLog, log_id)
+    if not log:
+        raise HTTPException(status_code=404, detail="Log not found")
+    session.delete(log)
+    session.commit()

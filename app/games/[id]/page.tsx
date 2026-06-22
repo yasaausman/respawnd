@@ -134,7 +134,11 @@ export default async function GamePage(props: PageProps<'/games/[id]'>) {
             )}
           </div>
 
-          <LogGameForm gameTitle={game.name} />
+          <LogGameForm
+            rawgId={game.id}
+            gameTitle={game.name}
+            coverUrl={game.background_image}
+          />
         </div>
       </div>
     </main>
