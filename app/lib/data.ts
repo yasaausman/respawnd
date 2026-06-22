@@ -1,199 +1,174 @@
 export type Status = 'Played' | 'Playing' | 'Backlog' | 'Want'
-export type Genre =
-  | 'Action'
-  | 'RPG'
-  | 'Strategy'
-  | 'Shooter'
-  | 'Adventure'
-  | 'Platformer'
-  | 'Horror'
-  | 'Sports'
-  | 'Simulation'
-  | 'Fighting'
 
-export interface Game {
-  id: string
-  title: string
-  coverUrl: string
-  releaseDate: string
-  genres: Genre[]
-  developer: string
-  description: string
+// ── Curated popular-games list ────────────────────────────────────────────────
+// rawg_id is 0 for games added after mid-2023 where the RAWG ID isn't known
+// at build time; the frontend resolves all of them by name search at runtime.
+
+export interface PopularGame {
+  rawg_id: number
+  name: string
+  slug: string
 }
 
-export interface LoggedGame {
-  game: Game
+export const POPULAR_GAMES: PopularGame[] = [
+  { rawg_id: 4291,   name: 'Counter-Strike 2',          slug: 'counter-strike-2' },
+  { rawg_id: 4415,   name: 'Dota 2',                    slug: 'dota-2' },
+  { rawg_id: 586618, name: 'PUBG: Battlegrounds',        slug: 'playerunknowns-battlegrounds' },
+  { rawg_id: 768058, name: 'Hogwarts Legacy',            slug: 'hogwarts-legacy' },
+  { rawg_id: 41994,  name: 'Cyberpunk 2077',             slug: 'cyberpunk-2077' },
+  { rawg_id: 326243, name: 'Elden Ring',                 slug: 'elden-ring' },
+  { rawg_id: 3498,   name: 'Grand Theft Auto V',         slug: 'grand-theft-auto-v' },
+  { rawg_id: 28747,  name: 'Red Dead Redemption 2',      slug: 'red-dead-redemption-2' },
+  { rawg_id: 499235, name: "Baldur's Gate 3",            slug: 'baldurs-gate-3' },
+  { rawg_id: 0,      name: 'Palworld',                   slug: 'palworld' },
+  { rawg_id: 0,      name: 'Helldivers 2',               slug: 'helldivers-2' },
+  { rawg_id: 16817,  name: 'Stardew Valley',             slug: 'stardew-valley' },
+  { rawg_id: 1656,   name: 'Terraria',                   slug: 'terraria' },
+  { rawg_id: 436886, name: 'Among Us',                   slug: 'among-us' },
+  { rawg_id: 521628, name: 'Valheim',                    slug: 'valheim' },
+  { rawg_id: 17973,  name: 'Rust',                       slug: 'rust' },
+  { rawg_id: 4212,   name: 'ARK: Survival Evolved',      slug: 'ark-survival-evolved' },
+  { rawg_id: 15739,  name: 'Dead by Daylight',           slug: 'dead-by-daylight' },
+  { rawg_id: 83580,  name: 'Apex Legends',               slug: 'apex-legends' },
+  { rawg_id: 13536,  name: 'Team Fortress 2',            slug: 'team-fortress-2' },
+  { rawg_id: 6968,   name: 'Left 4 Dead 2',              slug: 'left-4-dead-2' },
+  { rawg_id: 58134,  name: 'Monster Hunter: World',      slug: 'monster-hunter-world' },
+  { rawg_id: 5679,   name: 'Destiny 2',                  slug: 'destiny-2' },
+  { rawg_id: 759,    name: 'Path of Exile',              slug: 'path-of-exile' },
+  { rawg_id: 8981,   name: 'Warframe',                   slug: 'warframe' },
+  { rawg_id: 30514,  name: "No Man's Sky",               slug: 'no-mans-sky' },
+  { rawg_id: 439038, name: 'Hades',                      slug: 'hades' },
+  { rawg_id: 24397,  name: 'Hollow Knight',              slug: 'hollow-knight' },
+  { rawg_id: 12937,  name: 'Celeste',                    slug: 'celeste' },
+  { rawg_id: 231689, name: 'Deep Rock Galactic',         slug: 'deep-rock-galactic' },
+  { rawg_id: 556161, name: 'Risk of Rain 2',             slug: 'risk-of-rain-2' },
+  { rawg_id: 0,      name: 'Vampire Survivors',          slug: 'vampire-survivors' },
+  { rawg_id: 0,      name: 'Dave the Diver',             slug: 'dave-the-diver' },
+  { rawg_id: 0,      name: 'Lies of P',                  slug: 'lies-of-p' },
+  { rawg_id: 0,      name: 'Alan Wake 2',                slug: 'alan-wake-2' },
+  { rawg_id: 0,      name: 'Starfield',                  slug: 'starfield' },
+  { rawg_id: 0,      name: 'Cocoon',                     slug: 'cocoon' },
+  { rawg_id: 0,      name: 'Jusant',                     slug: 'jusant' },
+  { rawg_id: 0,      name: 'Viewfinder',                 slug: 'viewfinder' },
+  { rawg_id: 0,      name: 'The Talos Principle 2',      slug: 'the-talos-principle-2' },
+  { rawg_id: 0,      name: 'Armored Core VI',            slug: 'armored-core-vi' },
+  { rawg_id: 0,      name: 'Street Fighter 6',           slug: 'street-fighter-6' },
+  { rawg_id: 0,      name: 'Mortal Kombat 1',            slug: 'mortal-kombat-1' },
+  { rawg_id: 0,      name: 'Diablo IV',                  slug: 'diablo-iv' },
+  { rawg_id: 0,      name: 'Remnant 2',                  slug: 'remnant-2' },
+  { rawg_id: 0,      name: 'Sea of Stars',               slug: 'sea-of-stars' },
+  { rawg_id: 0,      name: 'Blasphemous 2',              slug: 'blasphemous-2' },
+  { rawg_id: 0,      name: 'Pizza Tower',                slug: 'pizza-tower' },
+  { rawg_id: 0,      name: 'Dredge',                     slug: 'dredge' },
+  { rawg_id: 0,      name: 'Venba',                      slug: 'venba' },
+]
+
+// ── API types ─────────────────────────────────────────────────────────────────
+
+export interface RawgGenre {
+  id: number
+  name: string
+  slug: string
+}
+
+export interface SearchResult {
+  id: number
+  name: string
+  background_image: string | null
+  released: string | null
+  genres: RawgGenre[]
+}
+
+export interface GameDetail {
+  id: number
+  slug: string
+  name: string
+  description: string
+  released: string | null
+  background_image: string | null
+  background_image_additional: string | null
+  rating: number
+  metacritic: number | null
+  genres: RawgGenre[]
+  developers?: { id: number; name: string; slug: string }[]
+}
+
+// ── Static library data (no backend yet) ──────────────────────────────────────
+
+export interface LibraryEntry {
+  id: string
+  title: string
+  coverUrl: string | null
+  genres: string[]
   status: Status
   rating: number
   review: string
 }
 
-export const GAMES: Game[] = [
+export const LOGGED_GAMES: LibraryEntry[] = [
   {
     id: 'elden-ring',
     title: 'Elden Ring',
     coverUrl: 'https://placehold.co/300x400/1e1b4b/a78bfa?text=Elden+Ring',
-    releaseDate: '2022-02-25',
     genres: ['Action', 'RPG'],
-    developer: 'FromSoftware',
-    description:
-      'Rise, Tarnished, and be guided by grace to brandish the power of the Elden Ring and become an Elden Lord in the Lands Between. A vast open world awaits, filled with ancient secrets and punishing challenges.',
-  },
-  {
-    id: 'baldurs-gate-3',
-    title: "Baldur's Gate 3",
-    coverUrl: 'https://placehold.co/300x400/14532d/86efac?text=BG3',
-    releaseDate: '2023-08-03',
-    genres: ['RPG', 'Strategy'],
-    developer: 'Larian Studios',
-    description:
-      'Gather your party and return to the Forgotten Realms in a tale of fellowship and betrayal, sacrifice and survival, and the lure of absolute power.',
-  },
-  {
-    id: 'cyberpunk-2077',
-    title: 'Cyberpunk 2077',
-    coverUrl: 'https://placehold.co/300x400/451a03/fb923c?text=CP2077',
-    releaseDate: '2020-12-10',
-    genres: ['Action', 'RPG'],
-    developer: 'CD Projekt Red',
-    description:
-      'An open-world action-adventure story set in Night City, a megalopolis obsessed with power, glamour, and body modification.',
-  },
-  {
-    id: 'hollow-knight',
-    title: 'Hollow Knight',
-    coverUrl: 'https://placehold.co/300x400/0c0a09/a8a29e?text=Hollow+Knight',
-    releaseDate: '2017-02-24',
-    genres: ['Action', 'Adventure', 'Platformer'],
-    developer: 'Team Cherry',
-    description:
-      'A challenging 2D action-adventure through a vast ruined kingdom of insects and heroes. Forge your own path in a vast underground world.',
-  },
-  {
-    id: 'hades',
-    title: 'Hades',
-    coverUrl: 'https://placehold.co/300x400/4c0519/fb7185?text=Hades',
-    releaseDate: '2020-09-17',
-    genres: ['Action', 'RPG'],
-    developer: 'Supergiant Games',
-    description:
-      'Defy the god of the dead as you hack and slash out of the Underworld in this rogue-like dungeon crawler from the creators of Bastion and Transistor.',
-  },
-  {
-    id: 'resident-evil-4',
-    title: 'Resident Evil 4',
-    coverUrl: 'https://placehold.co/300x400/1a2e1a/4ade80?text=RE4+Remake',
-    releaseDate: '2023-03-24',
-    genres: ['Horror', 'Action', 'Adventure'],
-    developer: 'Capcom',
-    description:
-      'Survive the terror of a rural European village in this remake of the iconic survival horror classic. Rescued from a cult, but the nightmare is just beginning.',
-  },
-  {
-    id: 'doom-eternal',
-    title: 'DOOM Eternal',
-    coverUrl: 'https://placehold.co/300x400/450a0a/f87171?text=DOOM+Eternal',
-    releaseDate: '2020-03-20',
-    genres: ['Shooter', 'Action'],
-    developer: 'id Software',
-    description:
-      'The armies of Hell have invaded Earth. Become the Slayer in an epic single-player campaign to conquer demons across dimensions and stop the consumption of all life.',
-  },
-  {
-    id: 'celeste',
-    title: 'Celeste',
-    coverUrl: 'https://placehold.co/300x400/1e1b4b/818cf8?text=Celeste',
-    releaseDate: '2018-01-25',
-    genres: ['Platformer', 'Adventure'],
-    developer: 'Maddy Thorson',
-    description:
-      'Help Madeline survive her inner demons on her journey to the top of Celeste Mountain in this incredibly tight and emotional platformer.',
-  },
-  {
-    id: 'sekiro',
-    title: 'Sekiro: Shadows Die Twice',
-    coverUrl: 'https://placehold.co/300x400/27272a/d4d4d8?text=Sekiro',
-    releaseDate: '2019-03-22',
-    genres: ['Action', 'Adventure'],
-    developer: 'FromSoftware',
-    description:
-      'Carve your own clever path to vengeance in the critically acclaimed action-adventure game set in late 1500s Sengoku Japan.',
-  },
-  {
-    id: 'disco-elysium',
-    title: 'Disco Elysium',
-    coverUrl: 'https://placehold.co/300x400/1c1917/d6d3d1?text=Disco+Elysium',
-    releaseDate: '2019-10-15',
-    genres: ['RPG', 'Adventure'],
-    developer: 'ZA/UM',
-    description:
-      'A groundbreaking open-world role-playing game where you can become any kind of detective you want. A city on the edge of the world.',
-  },
-  {
-    id: 'the-witcher-3',
-    title: 'The Witcher 3',
-    coverUrl: 'https://placehold.co/300x400/14532d/6ee7b7?text=Witcher+3',
-    releaseDate: '2015-05-19',
-    genres: ['RPG', 'Action', 'Adventure'],
-    developer: 'CD Projekt Red',
-    description:
-      'Play as Geralt of Rivia, a mercenary monster slayer, in a visually stunning fantasy universe full of meaningful choices and impactful consequences.',
-  },
-  {
-    id: 'dark-souls-3',
-    title: 'Dark Souls III',
-    coverUrl: 'https://placehold.co/300x400/1c1917/a8a29e?text=Dark+Souls+III',
-    releaseDate: '2016-04-12',
-    genres: ['Action', 'RPG'],
-    developer: 'FromSoftware',
-    description:
-      'The third entry in the acclaimed Dark Souls series. A punishing dark fantasy RPG where every death is a lesson and every victory is earned.',
-  },
-]
-
-export const LOGGED_GAMES: LoggedGame[] = [
-  {
-    game: GAMES[0],
     status: 'Played',
     rating: 9,
     review:
       'A masterpiece of open-world design. The boss fights are brutal but fair, and the world-building is extraordinary.',
   },
   {
-    game: GAMES[4],
+    id: 'hades',
+    title: 'Hades',
+    coverUrl: 'https://placehold.co/300x400/4c0519/fb7185?text=Hades',
+    genres: ['Action', 'RPG'],
     status: 'Playing',
     rating: 8,
     review:
-      'Incredibly addictive. The narrative integration with the roguelite loop is genius — every run feels different.',
+      'Incredibly addictive. The narrative integration with the roguelite loop is genius.',
   },
   {
-    game: GAMES[1],
+    id: 'baldurs-gate-3',
+    title: "Baldur's Gate 3",
+    coverUrl: 'https://placehold.co/300x400/14532d/86efac?text=BG3',
+    genres: ['RPG', 'Strategy'],
     status: 'Backlog',
     rating: 0,
     review: '',
   },
   {
-    game: GAMES[7],
+    id: 'celeste',
+    title: 'Celeste',
+    coverUrl: 'https://placehold.co/300x400/1e1b4b/818cf8?text=Celeste',
+    genres: ['Platformer', 'Adventure'],
     status: 'Played',
     rating: 10,
     review:
-      'Perfect platformer. The story hits hard and the gameplay is incredibly precise and satisfying. A must-play.',
+      'Perfect platformer. The story hits hard and the gameplay is incredibly precise and satisfying.',
   },
   {
-    game: GAMES[6],
+    id: 'doom-eternal',
+    title: 'DOOM Eternal',
+    coverUrl: 'https://placehold.co/300x400/450a0a/f87171?text=DOOM+Eternal',
+    genres: ['Shooter', 'Action'],
     status: 'Want',
     rating: 0,
     review: '',
   },
   {
-    game: GAMES[10],
+    id: 'the-witcher-3',
+    title: 'The Witcher 3',
+    coverUrl: 'https://placehold.co/300x400/14532d/6ee7b7?text=Witcher+3',
+    genres: ['RPG', 'Action', 'Adventure'],
     status: 'Played',
     rating: 9,
     review:
       'Still the gold standard for open-world RPGs. The side quests are better than most games entire campaigns.',
   },
   {
-    game: GAMES[8],
+    id: 'sekiro',
+    title: 'Sekiro: Shadows Die Twice',
+    coverUrl: 'https://placehold.co/300x400/27272a/d4d4d8?text=Sekiro',
+    genres: ['Action', 'Adventure'],
     status: 'Playing',
     rating: 7,
     review: 'The posture system is revolutionary. Incredibly rewarding once it clicks.',

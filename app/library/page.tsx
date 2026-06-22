@@ -36,7 +36,8 @@ export default function LibraryPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-zinc-100">My Library</h1>
         <p className="mt-2 text-zinc-400">
-          {LOGGED_GAMES.length} game{LOGGED_GAMES.length !== 1 ? 's' : ''} tracked
+          {LOGGED_GAMES.length} game{LOGGED_GAMES.length !== 1 ? 's' : ''}{' '}
+          tracked
         </p>
       </div>
 
@@ -48,7 +49,9 @@ export default function LibraryPage() {
             className="rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-center"
           >
             <p className="text-xl font-bold text-zinc-100">{counts[s]}</p>
-            <p className={`mt-0.5 text-xs font-medium ${STATUS_STYLES[s].split(' ')[2]}`}>
+            <p
+              className={`mt-0.5 text-xs font-medium ${STATUS_STYLES[s].split(' ')[2]}`}
+            >
               {s}
             </p>
           </div>
@@ -84,29 +87,26 @@ export default function LibraryPage() {
 
       {/* Game list */}
       <div className="flex flex-col gap-3">
-        {filtered.map(({ game, status, rating, review }) => (
+        {filtered.map(({ id, title, coverUrl, genres, status, rating, review }) => (
           <div
-            key={game.id}
+            key={id}
             className="flex items-start gap-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-4 transition-colors hover:border-zinc-700"
           >
-            <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg border border-zinc-800">
-              <Image
-                src={game.coverUrl}
-                alt={game.title}
-                fill
-                className="object-cover"
-                sizes="56px"
-              />
+            <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-800">
+              {coverUrl && (
+                <Image
+                  src={coverUrl}
+                  alt={title}
+                  fill
+                  className="object-cover"
+                  sizes="56px"
+                />
+              )}
             </div>
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <Link
-                  href={`/games/${game.id}`}
-                  className="font-semibold text-zinc-100 transition-colors hover:text-violet-400"
-                >
-                  {game.title}
-                </Link>
+                <span className="font-semibold text-zinc-100">{title}</span>
                 {rating > 0 && (
                   <span className="shrink-0 text-sm font-bold text-zinc-300">
                     ★ {rating}
@@ -121,9 +121,11 @@ export default function LibraryPage() {
                 >
                   {status}
                 </span>
-                <span className="text-xs text-zinc-600">
-                  {game.genres.slice(0, 2).join(' · ')}
-                </span>
+                {genres.length > 0 && (
+                  <span className="text-xs text-zinc-600">
+                    {genres.slice(0, 2).join(' · ')}
+                  </span>
+                )}
               </div>
 
               {review && (

@@ -1,4 +1,3 @@
-import { GAMES } from '@/app/lib/data'
 import GameGrid from '@/app/components/GameGrid'
 
 export default function Home() {
@@ -10,7 +9,7 @@ export default function Home() {
           Search and explore your next adventure
         </p>
       </div>
-      <GameGrid games={GAMES} />
+      <GameGrid />
     </main>
   )
 }
