@@ -6,7 +6,7 @@ import Image from 'next/image'
 import type { SearchResult } from '@/app/lib/data'
 import { POPULAR_GAMES } from '@/app/lib/data'
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
 async function searchGames(q: string): Promise<SearchResult[]> {
   const res = await fetch(

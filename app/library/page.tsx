@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { GameLog, Status } from '@/app/lib/data'
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
 const STATUS_STYLES: Record<Status, string> = {
   Played: 'border-emerald-800/50 bg-emerald-900/40 text-emerald-300',
