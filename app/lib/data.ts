@@ -91,6 +91,7 @@ export interface GameDetail {
   metacritic: number | null
   genres: RawgGenre[]
   developers?: { id: number; name: string; slug: string }[]
+  platforms?: { platform: { id: number; name: string; slug: string } }[]
 }
 
 // ── API types for game logs ───────────────────────────────────────────────────

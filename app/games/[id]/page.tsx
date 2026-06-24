@@ -155,7 +155,7 @@ export default async function GamePage(props: PageProps<'/games/[id]'>) {
         {/* More like this */}
         {similar.length > 0 && (
           <section className="mt-16">
-            <h2 className="text-xl font-bold mb-4">More Like This</h2>
+            <h2 className="text-xl font-bold mb-4">More Games Like This</h2>
             <div className="flex gap-4 overflow-x-auto pb-4">
               {similar.map((g: any) => (
                 <Link key={g.id} href={`/games/${g.id}`} className="group flex-shrink-0 cursor-none">

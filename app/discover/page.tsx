@@ -62,6 +62,8 @@ function filterTopGames(games: Game[]) {
   return games.filter(g => g.background_image && g.metacritic && g.metacritic >= 80)
 }
 
+const PINNED_IDS = [28, 3498, 3636, 58175, 3328]
+
 export default function DiscoverPage() {
   const [top250, setTop250] = useState<Game[]>([])
   const [upcoming, setUpcoming] = useState<Game[]>([])
@@ -72,11 +74,11 @@ export default function DiscoverPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API}/api/top250`).then(r => r.json()),
+      Promise.all(PINNED_IDS.map(id => fetch(`${API}/api/game/${id}`).then(r => r.json()))),
       fetch(`${API}/api/upcoming`).then(r => r.json()),
       fetch(`${API}/api/genres`).then(r => r.json()),
     ]).then(([t, u, g]) => {
-      setTop250(filterTopGames(t.results))
+      setTop250(t.filter((g: Game) => g.background_image))
       setUpcoming(u.results.filter((g: Game) => g.background_image))
       setGenres(g.results)
       if (g.results[0]) {

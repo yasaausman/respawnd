@@ -13,7 +13,7 @@ function Controller() {
     if (ref.current) ref.current.rotation.y += delta * 0.5
   })
 
-  return <primitive ref={ref} object={scene} scale={1} position={[0, -2, 0]} />
+  return <primitive ref={ref} object={scene} scale={1} position={[0, -1.5, 0]} rotation={[0, Math.PI, 0]} />
 }
 
 export default function ControllerScene() {
