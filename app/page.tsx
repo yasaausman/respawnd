@@ -27,7 +27,7 @@ export default function Home() {
             Log what you played. Rate what you finished. Track what's next.
           </p>
           <Link
-            href="/library"
+            href="/discover"
             className="w-fit rounded-full bg-violet-600 px-8 py-3 text-lg font-bold tracking-wide transition hover:bg-violet-500 active:scale-95"
           >
             Spawn In →
