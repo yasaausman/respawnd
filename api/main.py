@@ -98,6 +98,24 @@ async def get_trailers(game_id: int):
     return {"results": trailers}
 
 
+@app.get("/api/game/{game_id}/screenshots")
+async def get_screenshots(game_id: int):
+    data = await fetch_rawg(f"/games/{game_id}/screenshots")
+    screenshots = [{"id": s["id"], "image": s["image"]} for s in data.get("results", [])]
+    return {"results": screenshots}
+
+
+@app.get("/api/game/{game_id}/similar")
+async def similar_games(game_id: int):
+    game = await fetch_rawg(f"/games/{game_id}")
+    genres = ",".join([str(g["id"]) for g in game.get("genres", [])])
+    if not genres:
+        return {"results": []}
+    data = await fetch_rawg("/games", params={"genres": genres, "ordering": "-rating", "page_size": 10, "metacritic": "1,100"})
+    results = [{"id": g["id"], "name": g["name"], "background_image": g.get("background_image"), "rating": g.get("rating"), "genres": g.get("genres", [])} for g in data.get("results", []) if g["id"] != game_id and g.get("background_image")]
+    return {"results": results[:6]}
+
+
 @app.get("/api/game/{game_id}")
 async def get_game(game_id: int):
     return await fetch_rawg(f"/games/{game_id}")
