@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { GameLog, Status } from '@/app/lib/data'
+import { createClient } from '@/app/lib/supabase/client'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -22,16 +23,22 @@ export default function LibraryPage() {
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Status | 'All'>('All')
 
-  useEffect(() => {
-    fetch(`${API_BASE}/api/logs`)
-      .then((r) => {
-        if (!r.ok) throw new Error('Failed to load library')
-        return r.json() as Promise<GameLog[]>
-      })
-      .then(setLogs)
-      .catch(() => setError('Could not reach the backend. Make sure the API is running.'))
-      .finally(() => setLoading(false))
-  }, [])
+useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data }) => {
+      const token = data.session?.access_token
+      const headers: Record<string, string> = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
+      fetch(`${API_BASE}/api/logs`, { headers })
+        .then((r) => {
+          if (!r.ok) throw new Error('Failed to load library')
+          return r.json() as Promise<GameLog[]>
+        })
+        .then(setLogs)
+        .catch(() => setError('Could not reach the backend. Make sure the API is running.'))
+        .finally(() => setLoading(false))
+    })
+}, [])
 
   const filtered =
     filter === 'All' ? logs : logs.filter((lg) => lg.status === filter)

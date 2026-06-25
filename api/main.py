@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
@@ -25,6 +25,7 @@ engine = create_engine(DATABASE_URL)
 
 
 class GameLog(SQLModel, table=True):
+    __tablename__ = "game_logs"
     id: Optional[int] = Field(default=None, primary_key=True)
     rawg_id: int
     title: str
@@ -33,7 +34,7 @@ class GameLog(SQLModel, table=True):
     rating: Optional[int] = None
     review: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
+    user_id: Optional[str] = Field(default=None, nullable=True)
 
 class GameLogCreate(SQLModel):
     rawg_id: int
@@ -157,9 +158,32 @@ async def upcoming_games():
     return {"results": games}
 
 
+def get_user_id_from_token(authorization: str = None) -> Optional[str]:
+    """Extract user_id from Supabase JWT token."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    token = authorization.replace("Bearer ", "")
+    try:
+        import base64, json
+        payload = token.split(".")[1]
+        payload += "=" * (4 - len(payload) % 4)
+        decoded = json.loads(base64.b64decode(payload).decode("utf-8"))
+        return decoded.get("sub")
+    except Exception:
+        return None
+
+
 @app.post("/api/logs", response_model=GameLog, status_code=201)
-def create_log(payload: GameLogCreate, session: Session = Depends(get_session)):
-    log = GameLog(**payload.model_dump())
+def create_log(
+    payload: GameLogCreate,
+    authorization: Optional[str] = None,
+    session: Session = Depends(get_session),
+    request: Request = None,
+):
+    """Create a new game log entry."""
+    auth_header = request.headers.get("authorization") if request else None
+    user_id = get_user_id_from_token(auth_header)
+    log = GameLog(**payload.model_dump(), user_id=user_id)
     session.add(log)
     session.commit()
     session.refresh(log)
@@ -167,17 +191,31 @@ def create_log(payload: GameLogCreate, session: Session = Depends(get_session)):
 
 
 @app.get("/api/logs", response_model=list[GameLog])
-def list_logs(status: Optional[str] = Query(default=None), session: Session = Depends(get_session)):
+def list_logs(
+    status: Optional[str] = Query(default=None),
+    session: Session = Depends(get_session),
+    request: Request = None,
+):
+    """Return game logs for the current user."""
+    auth_header = request.headers.get("authorization") if request else None
+    user_id = get_user_id_from_token(auth_header)
     query = select(GameLog)
+    if user_id:
+        query = query.where(GameLog.user_id == user_id)
     if status:
         query = query.where(GameLog.status == status)
     return session.exec(query.order_by(GameLog.created_at.desc())).all()
 
 
 @app.delete("/api/logs/{log_id}", status_code=204)
-def delete_log(log_id: int, session: Session = Depends(get_session)):
+def delete_log(log_id: int, session: Session = Depends(get_session), request: Request = None):
+    """Delete a game log entry by id."""
+    auth_header = request.headers.get("authorization") if request else None
+    user_id = get_user_id_from_token(auth_header)
     log = session.get(GameLog, log_id)
     if not log:
         raise HTTPException(status_code=404, detail="Log not found")
+    if user_id and log.user_id and log.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
     session.delete(log)
     session.commit()

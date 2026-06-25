@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Status } from '@/app/lib/data'
+import { createClient } from '@/app/lib/supabase/client'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 const STATUSES: Status[] = ['Played', 'Playing', 'Backlog', 'Want']
@@ -19,15 +20,25 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data }) => {
+      setToken(data.session?.access_token ?? null)
+    })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     setError(null)
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (token) headers['Authorization'] = `Bearer ${token}`
       const res = await fetch(`${API_BASE}/api/logs`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           rawg_id: rawgId,
           title: gameTitle,
@@ -52,8 +63,7 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
         <div className="mb-2 text-3xl">✓</div>
         <p className="text-lg font-semibold text-emerald-400">Logged!</p>
         <p className="mt-1 text-sm text-zinc-400">
-          <span className="text-zinc-200">{gameTitle}</span> has been added to
-          your library.
+          <span className="text-zinc-200">{gameTitle}</span> has been added to your library.
         </p>
         <button
           onClick={() => { setSubmitted(false); setReview(''); setRating(7); setStatus('Played') }}
@@ -72,19 +82,22 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
         Add <span className="text-zinc-300">{gameTitle}</span> to your library
       </p>
 
+      {!token && (
+        <p className="mt-3 text-sm text-amber-400">
+          <a href="/login" className="underline">Sign in</a> to save games to your personal library.
+        </p>
+      )}
+
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-6">
-        {/* Status */}
         <div>
-          <label className="mb-3 block text-sm font-medium text-zinc-300">
-            Status
-          </label>
+          <label className="mb-3 block text-sm font-medium text-zinc-300">Status</label>
           <div className="flex flex-wrap gap-2">
             {STATUSES.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => setStatus(s)}
-                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors cursor-none ${
                   status === s
                     ? 'bg-violet-600 text-white'
                     : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
@@ -96,12 +109,8 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
           </div>
         </div>
 
-        {/* Rating */}
         <div>
-          <label
-            htmlFor="rating"
-            className="mb-3 flex items-center justify-between text-sm font-medium text-zinc-300"
-          >
+          <label htmlFor="rating" className="mb-3 flex items-center justify-between text-sm font-medium text-zinc-300">
             <span>Rating</span>
             <span className="text-lg font-bold text-violet-400">{rating}</span>
           </label>
@@ -122,14 +131,9 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
           </div>
         </div>
 
-        {/* Review */}
         <div>
-          <label
-            htmlFor="review"
-            className="mb-3 block text-sm font-medium text-zinc-300"
-          >
-            Review{' '}
-            <span className="font-normal text-zinc-600">(optional)</span>
+          <label htmlFor="review" className="mb-3 block text-sm font-medium text-zinc-300">
+            Review <span className="font-normal text-zinc-600">(optional)</span>
           </label>
           <textarea
             id="review"
@@ -150,7 +154,7 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-500 active:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-500 active:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-none"
         >
           {submitting ? 'Saving…' : 'Add to Library'}
         </button>
