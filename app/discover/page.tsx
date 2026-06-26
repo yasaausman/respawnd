@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -25,10 +25,11 @@ function GameCard({ game, rank }: { game: Game; rank?: number }) {
             src={game.background_image}
             alt={game.name}
             fill
+            loading="lazy"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="h-full w-full bg-zinc-800 flex items-center justify-center">
+          <div className="h-full w-full bg-white/5 flex items-center justify-center">
             <span className="text-zinc-500 text-xs">No image</span>
           </div>
         )}
@@ -47,7 +48,23 @@ function GameCard({ game, rank }: { game: Game; rank?: number }) {
   )
 }
 
-function HorizontalSlider({ games, showRank }: { games: Game[]; showRank?: boolean }) {
+function CardSkeleton() {
+  return (
+    <div className="flex-shrink-0 w-44 animate-pulse">
+      <div className="h-60 w-44 rounded-lg bg-white/10" />
+      <div className="mt-2 h-3 w-3/4 rounded bg-white/10" />
+    </div>
+  )
+}
+
+function HorizontalSlider({ games, showRank, loading }: { games: Game[]; showRank?: boolean; loading?: boolean }) {
+  if (loading) {
+    return (
+      <div className="flex gap-20 overflow-x-auto pb-4 scrollbar-hide justify-center">
+        {Array.from({ length: 5 }).map((_, i) => <CardSkeleton key={i} />)}
+      </div>
+    )
+  }
   return (
     <div className="flex gap-20 overflow-x-auto pb-4 scrollbar-hide justify-center">
       {games.map((game, i) => (
@@ -55,11 +72,6 @@ function HorizontalSlider({ games, showRank }: { games: Game[]; showRank?: boole
       ))}
     </div>
   )
-}
-
-// Filter out DLC/expansions — keep only games with metacritic >= 80 and a cover image
-function filterTopGames(games: Game[]) {
-  return games.filter(g => g.background_image && g.metacritic && g.metacritic >= 80)
 }
 
 const PINNED_IDS = [28, 3498, 3636, 58175, 3328]
@@ -70,45 +82,54 @@ export default function DiscoverPage() {
   const [genres, setGenres] = useState<{ id: number; name: string; slug: string }[]>([])
   const [genreGames, setGenreGames] = useState<Game[]>([])
   const [activeGenre, setActiveGenre] = useState<string>('')
-  const [loading, setLoading] = useState(true)
+  const [loadingTop, setLoadingTop] = useState(true)
+  const [loadingUpcoming, setLoadingUpcoming] = useState(true)
+  const [loadingGenre, setLoadingGenre] = useState(true)
 
   useEffect(() => {
-    Promise.all([
-      Promise.all(PINNED_IDS.map(id => fetch(`${API}/api/game/${id}`).then(r => r.json()))),
-      fetch(`${API}/api/upcoming`).then(r => r.json()),
-      fetch(`${API}/api/genres`).then(r => r.json()),
-    ]).then(([t, u, g]) => {
-      setTop250(t.filter((g: Game) => g.background_image))
-      setUpcoming(u.results.filter((g: Game) => g.background_image))
-      setGenres(g.results)
-      if (g.results[0]) {
-        setActiveGenre(g.results[0].slug)
-        fetch(`${API}/api/games/genre/${g.results[0].slug}`)
-          .then(r => r.json())
-          .then(d => setGenreGames(d.results.filter((g: Game) => g.background_image)))
-      }
-      setLoading(false)
-    })
+    Promise.all(PINNED_IDS.map(id => fetch(`${API}/api/game/${id}`).then(r => r.json())))
+      .then(games => {
+        setTop250(games.filter((g: Game) => g.background_image))
+        setLoadingTop(false)
+      })
+
+    fetch(`${API}/api/upcoming`)
+      .then(r => r.json())
+      .then(d => {
+        setUpcoming(d.results.filter((g: Game) => g.background_image))
+        setLoadingUpcoming(false)
+      })
+
+    fetch(`${API}/api/genres`)
+      .then(r => r.json())
+      .then(d => {
+        setGenres(d.results)
+        if (d.results[0]) {
+          setActiveGenre(d.results[0].slug)
+          fetch(`${API}/api/games/genre/${d.results[0].slug}`)
+            .then(r => r.json())
+            .then(g => {
+              setGenreGames(g.results.filter((g: Game) => g.background_image))
+              setLoadingGenre(false)
+            })
+        }
+      })
   }, [])
 
   const handleGenre = (slug: string) => {
     setActiveGenre(slug)
-    setGenreGames([])
+    setLoadingGenre(true)
     fetch(`${API}/api/games/genre/${slug}`)
       .then(r => r.json())
-      .then(d => setGenreGames(d.results.filter((g: Game) => g.background_image)))
+      .then(d => {
+        setGenreGames(d.results.filter((g: Game) => g.background_image))
+        setLoadingGenre(false)
+      })
   }
-
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 70% 40%, #2d1b69 0%, #1a1a2e 40%, #16213e 100%)' }}>
-      <p className="text-violet-400 text-lg animate-pulse">Loading games...</p>
-    </div>
-  )
 
   return (
     <main className="min-h-screen text-zinc-100 px-6 py-10" style={{ background: 'radial-gradient(ellipse at 70% 40%, #2d1b69 0%, #1a1a2e 40%, #16213e 100%)' }}>
 
-      {/* Top 5 Slider */}
       <section className="mb-16">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">🏆 Top Rated Games</h2>
@@ -116,38 +137,36 @@ export default function DiscoverPage() {
             See all 250 →
           </Link>
         </div>
-        <HorizontalSlider games={top250.slice(0, 5)} showRank />
+        <HorizontalSlider games={top250.slice(0, 5)} showRank loading={loadingTop} />
       </section>
 
-      {/* Top by Genre */}
       <section className="mb-16">
         <h2 className="text-2xl font-bold mb-6">🎯 Browse by Genre</h2>
         <div className="flex gap-2 flex-wrap justify-center mb-6">
-          {genres.map(g => (
-            <button
-              key={g.id}
-              onClick={() => handleGenre(g.slug)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition cursor-none ${
-                activeGenre === g.slug
-                  ? 'bg-violet-600 text-white'
-                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-              }`}
-            >
-              {g.name}
-            </button>
-          ))}
+          {genres.length === 0
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="h-8 w-20 rounded-full bg-white/10 animate-pulse" />
+              ))
+            : genres.map(g => (
+                <button
+                  key={g.id}
+                  onClick={() => handleGenre(g.slug)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition cursor-none ${
+                    activeGenre === g.slug
+                      ? 'bg-violet-600 text-white'
+                      : 'bg-white/5 text-zinc-400 hover:bg-white/10'
+                  }`}
+                >
+                  {g.name}
+                </button>
+              ))}
         </div>
-        {genreGames.length > 0 ? (
-          <HorizontalSlider games={genreGames.slice(0, 5)} />
-        ) : (
-          <p className="text-zinc-500 text-center animate-pulse">Loading...</p>
-        )}
+        <HorizontalSlider games={genreGames.slice(0, 5)} loading={loadingGenre} />
       </section>
 
-      {/* New & Upcoming */}
       <section className="mb-16">
         <h2 className="text-2xl font-bold mb-6">🚀 New & Upcoming</h2>
-        <HorizontalSlider games={upcoming.slice(0, 5)} />
+        <HorizontalSlider games={upcoming.slice(0, 5)} loading={loadingUpcoming} />
       </section>
 
     </main>
