@@ -78,6 +78,10 @@ async def fetch_rawg(path: str, params: dict[str, Any] | None = None) -> dict[st
     return response.json()
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 @app.get("/api/search")
 async def search_games(q: str = Query(..., min_length=1)):
     data = await fetch_rawg("/games", params={"search": q, "page_size": 12})
