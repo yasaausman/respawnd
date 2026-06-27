@@ -17,6 +17,7 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
   const [status, setStatus] = useState<Status>('Played')
   const [rating, setRating] = useState(7)
   const [review, setReview] = useState('')
+  const [trophies, setTrophies] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -46,6 +47,7 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
           status,
           rating,
           review: review.trim() || null,
+          trophies: trophies.trim() || null,
         }),
       })
       if (!res.ok) throw new Error('Server error')
@@ -66,7 +68,7 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
           <span className="text-zinc-200">{gameTitle}</span> has been added to your library.
         </p>
         <button
-          onClick={() => { setSubmitted(false); setReview(''); setRating(7); setStatus('Played') }}
+          onClick={() => { setSubmitted(false); setReview(''); setRating(7); setStatus('Played'); setTrophies('') }}
           className="mt-5 text-sm text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline transition-colors"
         >
           Log again
@@ -142,6 +144,20 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
             placeholder="Share your thoughts..."
             rows={4}
             className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none ring-violet-600 transition focus:ring-2"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="trophies" className="mb-3 block text-sm font-medium text-zinc-300">
+            Trophies <span className="font-normal text-zinc-600">(optional)</span>
+          </label>
+          <input
+            id="trophies"
+            type="text"
+            value={trophies}
+            onChange={(e) => setTrophies(e.target.value)}
+            placeholder="e.g. 12/50"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none ring-violet-600 transition focus:ring-2"
           />
         </div>
 

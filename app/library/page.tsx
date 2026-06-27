@@ -175,10 +175,15 @@ export default function LibraryPage() {
                         </span>
                       )}
                     </div>
-                    <div className="mt-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLES[log.status as Status]}`}>
                         {log.status}
                       </span>
+                      {log.trophies && (
+                        <span className="rounded-full border border-amber-700/50 bg-amber-950/40 px-2.5 py-0.5 text-xs font-medium text-amber-300">
+                          🏆 {log.trophies}
+                        </span>
+                      )}
                     </div>
                     {log.review && (
                       <p className="mt-2 line-clamp-2 text-sm text-zinc-500">{log.review}</p>

@@ -33,6 +33,7 @@ class GameLog(SQLModel, table=True):
     status: str
     rating: Optional[int] = None
     review: Optional[str] = None
+    trophies: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     user_id: Optional[str] = Field(default=None, nullable=True)
 
@@ -43,6 +44,7 @@ class GameLogCreate(SQLModel):
     status: str
     rating: Optional[int] = None
     review: Optional[str] = None
+    trophies: Optional[str] = None
 
 
 def get_session():

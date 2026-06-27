@@ -104,6 +104,7 @@ export interface GameLog {
   status: Status
   rating: number | null
   review: string | null
+  trophies: string | null
   created_at: string
 }
 
