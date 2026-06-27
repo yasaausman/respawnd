@@ -189,6 +189,25 @@ def create_log(
     """Create a new game log entry."""
     auth_header = request.headers.get("authorization") if request else None
     user_id = get_user_id_from_token(auth_header)
+
+    # Upsert: one log per user per game. Update if it exists, else insert.
+    existing = None
+    if user_id is not None:
+        existing = session.exec(
+            select(GameLog).where(
+                GameLog.user_id == user_id,
+                GameLog.rawg_id == payload.rawg_id,
+            )
+        ).first()
+
+    if existing:
+        for key, value in payload.model_dump().items():
+            setattr(existing, key, value)
+        session.add(existing)
+        session.commit()
+        session.refresh(existing)
+        return existing
+
     log = GameLog(**payload.model_dump(), user_id=user_id)
     session.add(log)
     session.commit()

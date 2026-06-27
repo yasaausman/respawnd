@@ -18,6 +18,7 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
   const [rating, setRating] = useState(7)
   const [review, setReview] = useState('')
   const [trophies, setTrophies] = useState('')
+  const [isExisting, setIsExisting] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,9 +27,24 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getSession().then(({ data }) => {
-      setToken(data.session?.access_token ?? null)
+      const tok = data.session?.access_token ?? null
+      setToken(tok)
+      if (!tok) return
+      fetch(`${API_BASE}/api/logs`, { headers: { Authorization: `Bearer ${tok}` } })
+        .then((r) => (r.ok ? r.json() : []))
+        .then((logs: any[]) => {
+          const existing = logs.find((l) => l.rawg_id === rawgId)
+          if (existing) {
+            setStatus(existing.status)
+            setRating(existing.rating ?? 7)
+            setReview(existing.review ?? '')
+            setTrophies(existing.trophies ?? '')
+            setIsExisting(true)
+          }
+        })
+        .catch(() => {})
     })
-  }, [])
+  }, [rawgId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -79,9 +95,9 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-      <h2 className="text-lg font-semibold text-zinc-100">Log this game</h2>
+      <h2 className="text-lg font-semibold text-zinc-100">{isExisting ? 'Update your log' : 'Log this game'}</h2>
       <p className="mt-1 text-sm text-zinc-500">
-        Add <span className="text-zinc-300">{gameTitle}</span> to your library
+        {isExisting ? 'You already logged ' : 'Add '}<span className="text-zinc-300">{gameTitle}</span>{isExisting ? '' : ' to your library'}
       </p>
 
       {!token && (
@@ -172,7 +188,7 @@ export default function LogGameForm({ rawgId, gameTitle, coverUrl }: Props) {
           disabled={submitting}
           className="w-full rounded-xl bg-violet-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-violet-500 active:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-none"
         >
-          {submitting ? 'Saving…' : 'Add to Library'}
+          {submitting ? 'Saving…' : isExisting ? 'Update Log' : 'Add to Library'}
         </button>
       </form>
     </div>
