@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { GameDetail } from '@/app/lib/data'
 import LogGameForm from '@/app/components/LogGameForm'
+import ColorBackdrop from '@/app/components/ColorBackdrop'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -63,11 +64,10 @@ export default async function GamePage(props: PageProps<'/games/[id]'>) {
   const platforms = game.platforms?.map((p: any) => p.platform.name) ?? []
 
   return (
-    <main
-      className="min-h-screen text-zinc-100 px-6 py-10"
-      style={{ background: 'radial-gradient(ellipse at 70% 40%, #2d1b69 0%, #1a1a2e 40%, #16213e 100%)' }}
-    >
-      <div className="mx-auto max-w-5xl">
+    <main className="relative min-h-screen overflow-hidden bg-[#0A0612] text-zinc-100 px-6 py-10">
+      <ColorBackdrop coverUrl={game.background_image} />
+
+      <div className="relative z-10 mx-auto max-w-5xl">
         <Link href="/discover" className="mb-8 inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-zinc-300 cursor-none">
           ← Back to Discover
         </Link>
@@ -75,11 +75,11 @@ export default async function GamePage(props: PageProps<'/games/[id]'>) {
         <div className="flex flex-col gap-8 md:flex-row md:items-start mt-6">
           {/* Cover */}
           <div className="shrink-0 md:sticky md:top-24">
-            <div className="relative mx-auto h-80 w-56 overflow-hidden rounded-2xl border border-zinc-800 shadow-2xl shadow-black/60 md:h-96 md:w-64">
+            <div className="relative mx-auto h-80 w-56 overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/60 md:h-96 md:w-64">
               {game.background_image ? (
                 <Image src={game.background_image} alt={game.name} fill className="object-cover" priority />
               ) : (
-                <div className="flex h-full items-center justify-center bg-zinc-800 p-4 text-center text-sm text-zinc-600">{game.name}</div>
+                <div className="flex h-full items-center justify-center bg-white/5 p-4 text-center text-sm text-zinc-600">{game.name}</div>
               )}
             </div>
           </div>
@@ -88,7 +88,7 @@ export default async function GamePage(props: PageProps<'/games/[id]'>) {
           <div className="flex min-w-0 flex-1 flex-col gap-6">
             <div>
               <p className="text-sm text-zinc-500">{[developer, releaseYear].filter(Boolean).join(' · ')}</p>
-              <h1 className="mt-1 text-3xl font-bold text-zinc-100 md:text-4xl">{game.name}</h1>
+              <h1 className="mt-1 text-3xl font-bold text-zinc-100 md:text-4xl font-[family-name:var(--font-display)]">{game.name}</h1>
 
               {/* Badges */}
               <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -122,7 +122,7 @@ export default async function GamePage(props: PageProps<'/games/[id]'>) {
                   <p className="text-xs text-zinc-500 mb-2">Available on</p>
                   <div className="flex flex-wrap gap-2">
                     {platforms.map((p: string) => (
-                      <span key={p} className="rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-300">{p}</span>
+                      <span key={p} className="rounded-md bg-white/5 px-2 py-1 text-xs text-zinc-300">{p}</span>
                     ))}
                   </div>
                 </div>
@@ -141,7 +141,7 @@ export default async function GamePage(props: PageProps<'/games/[id]'>) {
         {/* Screenshots */}
         {screenshots.length > 0 && (
           <section className="mt-16">
-            <h2 className="text-xl font-bold mb-4">Screenshots</h2>
+            <h2 className="text-xl font-bold mb-4 font-[family-name:var(--font-display)]">Screenshots</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {screenshots.map((s: any) => (
                 <div key={s.id} className="relative h-40 overflow-hidden rounded-lg">
@@ -155,7 +155,7 @@ export default async function GamePage(props: PageProps<'/games/[id]'>) {
         {/* More like this */}
         {similar.length > 0 && (
           <section className="mt-16">
-            <h2 className="text-xl font-bold mb-4">More Games Like This</h2>
+            <h2 className="text-xl font-bold mb-4 font-[family-name:var(--font-display)]">More Games Like This</h2>
             <div className="flex gap-4 overflow-x-auto pb-4">
               {similar.map((g: any) => (
                 <Link key={g.id} href={`/games/${g.id}`} className="group flex-shrink-0 cursor-none">
