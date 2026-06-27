@@ -20,6 +20,9 @@ if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL environment variable is not set")
 
 RAWG_BASE_URL = "https://api.rawg.io/api"
+GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
+GNEWS_BASE_URL = "https://gnews.io/api/v4"
+_news_cache: dict[str, Any] = {"data": None, "ts": None}
 
 engine = create_engine(DATABASE_URL)
 
@@ -177,6 +180,50 @@ def get_user_id_from_token(authorization: str = None) -> Optional[str]:
         return decoded.get("sub")
     except Exception:
         return None
+
+
+@app.get("/api/news")
+async def get_news():
+    """Gaming news via GNews, cached 30 min to respect the free-tier limit."""
+    now = datetime.now(timezone.utc)
+    cached = _news_cache.get("data")
+    ts = _news_cache.get("ts")
+    if cached and ts and (now - ts).total_seconds() < 1800:
+        return cached
+
+    if not GNEWS_API_KEY:
+        return {"articles": []}
+
+    params = {
+        "q": "video games OR gaming",
+        "lang": "en",
+        "topic": "technology",
+        "max": 10,
+        "apikey": GNEWS_API_KEY,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(f"{GNEWS_BASE_URL}/search", params=params)
+            resp.raise_for_status()
+            data = resp.json()
+    except Exception:
+        return cached or {"articles": []}
+
+    articles = [
+        {
+            "title": a.get("title"),
+            "description": a.get("description"),
+            "url": a.get("url"),
+            "image": a.get("image"),
+            "published_at": a.get("publishedAt"),
+            "source": a.get("source", {}).get("name"),
+        }
+        for a in data.get("articles", [])
+    ]
+    result = {"articles": articles}
+    _news_cache["data"] = result
+    _news_cache["ts"] = now
+    return result
 
 
 @app.post("/api/logs", response_model=GameLog, status_code=201)

@@ -76,6 +76,64 @@ function HorizontalSlider({ games, showRank, loading }: { games: Game[]; showRan
 
 const PINNED_IDS = [28, 3498, 3636, 58175, 3328]
 
+type Article = {
+  title: string
+  description: string | null
+  url: string
+  image: string | null
+  published_at: string | null
+  source: string | null
+}
+
+function NewsCard({ article }: { article: Article }) {
+  const date = article.published_at
+    ? new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : null
+  return (
+    <a
+    
+      href={article.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex-shrink-0 w-72 cursor-none overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] transition hover:border-violet-500/40 hover:bg-white/[0.06]"
+    >
+      <div className="relative h-40 w-full overflow-hidden bg-white/5">
+        {article.image && (
+          <img
+            src={article.image}
+            alt={article.title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        )}
+      </div>
+      <div className="p-4">
+        <div className="mb-2 flex items-center gap-2 text-[11px] text-violet-300/80">
+          {article.source && <span>{article.source}</span>}
+          {article.source && date && <span className="text-zinc-600">•</span>}
+          {date && <span className="text-zinc-500">{date}</span>}
+        </div>
+        <h3 className="line-clamp-2 text-sm font-semibold text-zinc-100 group-hover:text-white">{article.title}</h3>
+        {article.description && (
+          <p className="mt-1.5 line-clamp-2 text-xs text-zinc-500">{article.description}</p>
+        )}
+      </div>
+    </a>
+  )
+}
+
+function NewsSkeleton() {
+  return (
+    <div className="w-72 flex-shrink-0 animate-pulse overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+      <div className="h-40 w-full bg-white/10" />
+      <div className="space-y-2 p-4">
+        <div className="h-3 w-1/3 rounded bg-white/10" />
+        <div className="h-4 w-full rounded bg-white/10" />
+        <div className="h-3 w-2/3 rounded bg-white/5" />
+      </div>
+    </div>
+  )
+}
+
 export default function DiscoverPage() {
   const [top250, setTop250] = useState<Game[]>([])
   const [upcoming, setUpcoming] = useState<Game[]>([])
@@ -85,6 +143,8 @@ export default function DiscoverPage() {
   const [loadingTop, setLoadingTop] = useState(true)
   const [loadingUpcoming, setLoadingUpcoming] = useState(true)
   const [loadingGenre, setLoadingGenre] = useState(true)
+  const [news, setNews] = useState<Article[]>([])
+  const [loadingNews, setLoadingNews] = useState(true)
 
   useEffect(() => {
     Promise.all(PINNED_IDS.map(id => fetch(`${API}/api/game/${id}`).then(r => r.json())))
@@ -99,6 +159,14 @@ export default function DiscoverPage() {
         setUpcoming(d.results.filter((g: Game) => g.background_image))
         setLoadingUpcoming(false)
       })
+
+    fetch(`${API}/api/news`)
+      .then(r => r.json())
+      .then(d => {
+        setNews(d.articles ?? [])
+        setLoadingNews(false)
+      })
+      .catch(() => setLoadingNews(false))
 
     fetch(`${API}/api/genres`)
       .then(r => r.json())
@@ -167,6 +235,15 @@ export default function DiscoverPage() {
       <section className="mb-16">
         <h2 className="text-2xl font-bold mb-6">🚀 New & Upcoming</h2>
         <HorizontalSlider games={upcoming.slice(0, 5)} loading={loadingUpcoming} />
+      </section>
+
+      <section className="mb-16">
+        <h2 className="text-2xl font-bold mb-6">📰 Gaming News</h2>
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+          {loadingNews
+            ? Array.from({ length: 4 }).map((_, i) => <NewsSkeleton key={i} />)
+            : news.map((a, i) => <NewsCard key={i} article={a} />)}
+        </div>
       </section>
 
     </main>
